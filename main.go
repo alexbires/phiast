@@ -11,5 +11,5 @@ import (
 )
 
 func main() {
-	fmt.Printf('phiast');
+	fmt.Printf("phiast");
 }
