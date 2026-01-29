@@ -43,8 +43,8 @@ type ExitLine struct {
 }
 
 type ReturnRecord struct {
-	level    int16  //the level of execution
-	funcNo   int16  // the number of the function we are calling
+	level    uint16 //the level of execution
+	funcNo   uint16 // the number of the function we are calling
 	retValue string // the return value
 }
 
@@ -59,7 +59,8 @@ func Parse(logs string) ([]XDebugLine, error) {
 
 	for i := 3; i < len(log_lines)-1; i++ {
 		entries := strings.Split(log_lines[i], "\t")
-		if entries[2] == "0" {
+		switch entries[2] {
+		case "0":
 			lvl, _ := strconv.ParseUint(entries[0], 10, 16)
 			fnc, _ := strconv.ParseUint(entries[1], 10, 16)
 			tme, _ := strconv.ParseFloat(entries[3], 64)
@@ -83,6 +84,18 @@ func Parse(logs string) ([]XDebugLine, error) {
 				},
 			}
 			parsedLines[i-3] = e
+		case "R":
+			lvl, _ := strconv.ParseUint(entries[0], 10, 16)
+			fnc, _ := strconv.ParseUint(entries[1], 10, 16)
+			return_line := XDebugLine{
+				Kind: Return,
+				Return: &ReturnRecord{
+					level:    uint16(lvl),
+					funcNo:   uint16(fnc),
+					retValue: entries[5],
+				},
+			}
+			parsedLines[i-3] = return_line
 		}
 	}
 	//fmt.Println(log_lines[0])
