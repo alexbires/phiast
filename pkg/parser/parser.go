@@ -23,28 +23,28 @@ type XDebugLine struct {
 }
 
 type EntryLine struct {
-	level      uint64   //the level of execution
-	funcNo     uint64   // the number of the function we are calling
+	level      uint32   //the level of execution
+	funcNo     uint32   // the number of the function we are calling
 	timeIndex  float64  //the time index of where we are executing
 	memUsage   uint64   // how much memory we are using
 	funcName   string   // name of the function
 	uoi        uint8    // user defined (1) or internal (0) function
 	fileName   string   // name of the file we are pulling from
-	lineNumber uint64   // the line number
-	argCount   uint64   // the number of argumetns the function takes in
+	lineNumber uint32   // the line number
+	argCount   uint32   // the number of argumetns the function takes in
 	arguments  []string //the arguments we have passed into the function
 }
 
 type ExitLine struct {
-	level     int16   //the level of execution
-	funcNo    int16   // the number of the function we are calling
+	level     uint32  //the level of execution
+	funcNo    uint32  // the number of the function we are calling
 	timeIndex float64 //the time index of where we are executing
 	memUsage  uint64  // how much memory we are using
 }
 
 type ReturnRecord struct {
-	level    uint16 //the level of execution
-	funcNo   uint16 // the number of the function we are calling
+	level    uint32 //the level of execution
+	funcNo   uint32 // the number of the function we are calling
 	retValue string // the return value
 }
 
@@ -61,37 +61,20 @@ func Parse(logs string) ([]XDebugLine, error) {
 		entries := strings.Split(log_lines[i], "\t")
 		switch entries[2] {
 		case "0":
-			lvl, _ := strconv.ParseUint(entries[0], 10, 16)
-			fnc, _ := strconv.ParseUint(entries[1], 10, 16)
-			tme, _ := strconv.ParseFloat(entries[3], 64)
-			mem, _ := strconv.ParseUint(entries[4], 10, 16)
-			u, _ := strconv.ParseUint(entries[6], 10, 8)
-			line, _ := strconv.ParseUint(entries[9], 10, 16)
-			arg, _ := strconv.ParseUint(entries[10], 10, 16)
-			e := XDebugLine{
-				Kind: Entry,
-				Entry: &EntryLine{
-					level:      lvl,
-					funcNo:     fnc,
-					timeIndex:  tme,
-					memUsage:   mem,
-					funcName:   entries[5],
-					uoi:        uint8(u),
-					fileName:   entries[8],
-					lineNumber: line,
-					argCount:   arg,
-					arguments:  make([]string, arg),
-				},
-			}
+			e := handleEntryLine(entries)
 			parsedLines[i-3] = e
+		case "1":
+			e := handleExitLine(entries)
+			parsedLines[i-3] = e
+
 		case "R":
-			lvl, _ := strconv.ParseUint(entries[0], 10, 16)
-			fnc, _ := strconv.ParseUint(entries[1], 10, 16)
+			lvl, _ := strconv.ParseUint(entries[0], 10, 32)
+			fnc, _ := strconv.ParseUint(entries[1], 10, 32)
 			return_line := XDebugLine{
 				Kind: Return,
 				Return: &ReturnRecord{
-					level:    uint16(lvl),
-					funcNo:   uint16(fnc),
+					level:    uint32(lvl),
+					funcNo:   uint32(fnc),
 					retValue: entries[5],
 				},
 			}
@@ -100,4 +83,49 @@ func Parse(logs string) ([]XDebugLine, error) {
 	}
 	//fmt.Println(log_lines[0])
 	return parsedLines, nil
+}
+
+// handleExitLine is a helper function that will handle the parsing
+// of an exit line into the appropriate struct and return it.
+func handleExitLine(entries []string) XDebugLine {
+	lvl, _ := strconv.ParseUint(entries[0], 10, 32)
+	fnc, _ := strconv.ParseUint(entries[1], 10, 32)
+	tme, _ := strconv.ParseFloat(entries[2], 64)
+	mem, _ := strconv.ParseUint(entries[4], 10, 64)
+	e := XDebugLine{
+		Kind: Exit,
+		Exit: &ExitLine{
+			level:     uint32(lvl),
+			funcNo:    uint32(fnc),
+			timeIndex: tme,
+			memUsage:  mem,
+		},
+	}
+	return e
+}
+
+func handleEntryLine(entries []string) XDebugLine {
+	lvl, _ := strconv.ParseUint(entries[0], 10, 32)
+	fnc, _ := strconv.ParseUint(entries[1], 10, 32)
+	tme, _ := strconv.ParseFloat(entries[3], 64)
+	mem, _ := strconv.ParseUint(entries[4], 10, 16)
+	u, _ := strconv.ParseUint(entries[6], 10, 8)
+	line, _ := strconv.ParseUint(entries[9], 10, 32)
+	arg, _ := strconv.ParseUint(entries[10], 10, 32)
+	e := XDebugLine{
+		Kind: Entry,
+		Entry: &EntryLine{
+			level:      uint32(lvl),
+			funcNo:     uint32(fnc),
+			timeIndex:  tme,
+			memUsage:   mem,
+			funcName:   entries[5],
+			uoi:        uint8(u),
+			fileName:   entries[8],
+			lineNumber: uint32(line),
+			argCount:   uint32(arg),
+			arguments:  make([]string, arg),
+		},
+	}
+	return e
 }
