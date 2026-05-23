@@ -1,0 +1,13 @@
+Version: 3.4.2
+File format: 4
+TRACE START [2025-08-19 21:12:27.842554]
+1	0	0	0.000520	360624	{main}	1		/var/www/html/happy.php	0	0
+2	1	0	0.000554	360656	xdebug_info	0		/var/www/html/happy.php	6	0
+2	1	1	0.000971	360768
+2	1	R			NULL
+2	2	0	0.000999	360768	help	1		/var/www/html/happy.php	11	1	14
+2	2	1	0.001012	360768
+1	0	1	0.001020	360768
+			0.001079	344768
+TRACE END   [2025-08-19 21:12:27.843152]
+
