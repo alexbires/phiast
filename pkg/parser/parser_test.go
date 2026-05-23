@@ -62,4 +62,8 @@ func TestLongTrace(t *testing.T) {
 	if logs[0].Entry.level != 1 && logs[0].Entry.funcName != "{main}" {
 		t.Error("First entry wrong level or function name")
 	}
+	if logs[1].Kind != Entry &&
+		logs[1].Exit.level != 1 {
+		t.Error("1st line is not an entry line")
+	}
 }
